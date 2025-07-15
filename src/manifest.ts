@@ -32,15 +32,7 @@ export default defineManifest({
     48: 'icon48.png',
     128: 'icon128.png',
   },
-  permissions: ['activeTab', 'storage'],
-  content_scripts: [
-    {
-      js: isDev
-        ? ['src/content/index.dev.tsx']
-        : ['src/content/index.prod.tsx'],
-      matches: ['<all_urls>'],
-    },
-  ],
+  permissions: ['storage'],
   web_accessible_resources: [
     {
       resources: ['*.js', '*.css', 'public/*'],
