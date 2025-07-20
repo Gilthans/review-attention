@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import getAuthenticatedUser from '@utils/auth';
+import { useConfig } from '@utils/config';
 
 type UserInfo = {
   login: string;
@@ -23,37 +24,41 @@ export default function Popup() {
   const [prs, setPRs] = useState<PR[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [needsConfig, setNeedsConfig] = useState(false);
+  const [config, configVersion] = useConfig();
+
   useEffect(() => {
-    chrome.storage.sync.get(
-      ['REPO_OWNER', 'REPO_NAME', 'GITHUB_TOKEN'],
-      (config) => {
-        if (!config.REPO_OWNER || !config.REPO_NAME || !config.GITHUB_TOKEN) {
-          setNeedsConfig(true);
-          setLoading(false);
-          return;
-        }
-        chrome.runtime.sendMessage({ type: 'GET_PRS' }, (response) => {
-          setLoading(false);
-          if (response?.error) {
-            setError(response.error);
-            setPRs([]);
-          } else {
-            setPRs(response.prs || []);
-            setError(null);
-          }
-        });
+    if (config === null) return;
+    chrome.runtime.sendMessage({ type: 'GET_PRS' }, (response) => {
+      setLoading(false);
+      if (response?.error) {
+        setError(response.error);
+        setPRs([]);
+      } else {
+        setPRs(response.prs || []);
+        setError(null);
       }
-    );
-  }, []);
+    });
+  }, [configVersion]);
 
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
-    getAuthenticatedUser().then(setCurrentUser);
+    getAuthenticatedUser().then(setCurrentUser).catch(setError);
   }, []);
 
-  if (needsConfig) {
+  if (config === null) {
+    return (
+      <div
+        id='my-ext'
+        className='flex min-h-screen items-center justify-center bg-base-200'
+        data-theme='light'
+      >
+        config
+        <span className='loading loading-spinner loading-lg text-primary' />
+      </div>
+    );
+  }
+  if (!config.IsConfigured()) {
     return (
       <div id='my-ext' className='container p-4' data-theme='light'>
         <h2 className='mb-2 text-lg font-bold'>Configuration Needed</h2>

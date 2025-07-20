@@ -1,54 +1,46 @@
+import { Configuration, GetConfig, OnConfigChange } from '@utils/config.ts';
 import { Octokit } from 'octokit';
 
 const octokit = new Octokit({});
 
 let authenticatedLogin: string | null = null;
 let authenticatedLoginFetchedAt: number | null = null;
-let token: string | null = null;
 
-async function fetchAuthenticatedUser(): Promise<void> {
-  const now = Date.now();
-  // Refresh if never fetched or older than 15 minutes (900000 ms)
-  if (
-    !authenticatedLogin ||
-    !authenticatedLoginFetchedAt ||
-    now - authenticatedLoginFetchedAt > 900000
-  ) {
-    if (!token) return;
-    try {
-      const { data } = await octokit.request('GET /user', {
-        headers: {
-          Authorization: `token ${token}`,
-        },
-      });
-      authenticatedLogin = data.login;
-      authenticatedLoginFetchedAt = now;
-    } catch (error) {
-      authenticatedLogin = null;
-      authenticatedLoginFetchedAt = null;
+async function fetchAuthenticatedUser(config: Configuration): Promise<string> {
+  try {
+    const { data } = await octokit.request('GET /user', {
+      headers: {
+        Authorization: `token ${config.GithubToken}`,
+      },
+    });
+    authenticatedLogin = data.login;
+    if (!authenticatedLogin) {
+      throw new Error('Authenticated user login is empty.');
     }
+    authenticatedLoginFetchedAt = Date.now();
+    return authenticatedLogin;
+  } catch (error) {
+    console.error('Failed loading authenticated user...');
+    authenticatedLogin = null;
+    authenticatedLoginFetchedAt = null;
+    throw error;
   }
 }
 
-chrome.storage.sync.get(['GITHUB_TOKEN'], (config) => {
-  token = config.GITHUB_TOKEN || '';
-  fetchAuthenticatedUser();
-});
+GetConfig().then(fetchAuthenticatedUser);
+OnConfigChange(fetchAuthenticatedUser);
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace !== 'sync') return;
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [key, { newValue }] of Object.entries(changes)) {
-    if (key === 'GITHUB_TOKEN') {
-      token = newValue || '';
-      authenticatedLogin = null;
-      authenticatedLoginFetchedAt = null;
-      fetchAuthenticatedUser();
-    }
-  }
-});
+export default async function getAuthenticatedUser(): Promise<string> {
+  const now = Date.now();
+  // Refresh if never fetched or older than 15 minutes (900000 ms)
+  if (
+    authenticatedLogin &&
+    authenticatedLoginFetchedAt &&
+    now - authenticatedLoginFetchedAt > 900000
+  )
+    return authenticatedLogin;
+  const config = await GetConfig();
+  if (!config.GithubToken) throw new Error('GitHub token is not configured.');
 
-export default async function getAuthenticatedUser(): Promise<string | null> {
-  await fetchAuthenticatedUser();
-  return authenticatedLogin;
+  return fetchAuthenticatedUser(config);
 }
