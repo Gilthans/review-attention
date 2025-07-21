@@ -19,7 +19,7 @@ module.exports = {
     'react/jsx-filename-extension': 'off',
     'import/extensions': 'off',
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': ['error'],
+    '@typescript-eslint/no-unused-vars': ['error', {"varsIgnorePattern": "^_", "argsIgnorePattern": "^_"}],
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': 'error',
     'import/no-extraneous-dependencies': 'off',
