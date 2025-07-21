@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-param-reassign */
 import { resolve } from 'path';
 import { crx } from '@crxjs/vite-plugin';
 import react from '@vitejs/plugin-react';

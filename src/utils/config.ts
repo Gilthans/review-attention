@@ -28,7 +28,6 @@ const initialConfigLoadPromise = new Promise<void>((resolve) => {
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace !== 'sync') return;
-  // eslint-disable-next-line no-restricted-syntax
   let changedMade = false;
   for (const [key, { newValue }] of Object.entries(changes)) {
     if (key === 'REPO_OWNER') {
