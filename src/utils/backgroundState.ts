@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Repository } from '@utils/config.ts';
 
 export type UserInfo = {
   login: string;
@@ -19,6 +20,7 @@ export type PR = {
 };
 
 class BackgroundState {
+  repos = new Set<Repository>();
   latestPRs: PR[] = [];
   latestError: string | null = null;
   lastUpdateTime: Date | null = null;
@@ -29,7 +31,13 @@ const currentState: BackgroundState = new BackgroundState();
 const onChangeCallbacks: ((config: BackgroundState) => void)[] = [];
 const initialStateLoadPromise = new Promise<void>((resolve) => {
   chrome.storage.session.get(
-    ['LATEST_PRS', 'LATEST_ERROR', 'LAST_UPDATE_TIME', 'IS_UPDATE_IN_PROGRESS'],
+    [
+      'LATEST_PRS',
+      'LATEST_ERROR',
+      'LAST_UPDATE_TIME',
+      'IS_UPDATE_IN_PROGRESS',
+      'REPOS',
+    ],
     (state) => {
       currentState.latestPRs = state.LATEST_PRS;
       currentState.latestError = state.LATEST_ERROR;
@@ -38,6 +46,9 @@ const initialStateLoadPromise = new Promise<void>((resolve) => {
           ? new Date(state.LAST_UPDATE_TIME)
           : null;
       currentState.isUpdateInProgress = state.IS_UPDATE_IN_PROGRESS;
+      currentState.repos = state.REPOS
+        ? new Set<Repository>(JSON.parse(state.REPOS))
+        : new Set<Repository>();
       resolve();
     }
   );
@@ -54,11 +65,15 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       currentState.latestError = newValue || '';
       changedMade = true;
     } else if (key === 'LAST_UPDATE_TIME' && newValue) {
-      console.log('Updating lastUpdateTime:', newValue);
       currentState.lastUpdateTime = newValue ? new Date(newValue) : null;
       changedMade = true;
     } else if (key === 'IS_UPDATE_IN_PROGRESS') {
       currentState.isUpdateInProgress = newValue || false;
+      changedMade = true;
+    } else if (key === 'REPOS') {
+      currentState.repos = newValue
+        ? new Set<Repository>(JSON.parse(newValue))
+        : new Set<Repository>();
       changedMade = true;
     }
   }
@@ -103,6 +118,8 @@ export function UpdateState(newState: Partial<BackgroundState>) {
       updatedSessionState['LAST_UPDATE_TIME'] = newState[key]?.valueOf();
     } else if (key == 'isUpdateInProgress') {
       updatedSessionState['IS_UPDATE_IN_PROGRESS'] = newState[key] || false;
+    } else if (key == 'repos') {
+      updatedSessionState['REPOS'] = JSON.stringify(newState[key]);
     }
   }
   chrome.storage.session.set(updatedSessionState);

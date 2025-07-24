@@ -55,8 +55,11 @@ export function RepositorySelectionCard(props: {
               <form className='space-y-2'>
                 {ownerRepos.map((repo) => {
                   const checked =
-                    selection.RepoOwner === repo.owner.login &&
-                    selection.RepoName === repo.name;
+                    selection.IndividualRepos.findIndex(
+                      (configuredRepo) =>
+                        configuredRepo.owner === repo.owner.login &&
+                        configuredRepo.name === repo.name
+                    ) !== -1;
                   return (
                     <label
                       key={repo.id}

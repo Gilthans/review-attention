@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 
+export class Repository {
+  owner: string;
+  name: string;
+}
+
 export class RepositorySelection {
-  RepoOwner: string = '';
-  RepoName: string = '';
+  Owners: string[] = [];
+  IndividualRepos: Repository[] = [];
 }
 
 export class Configuration {
   IsConfigured(): boolean {
     return !!(
-      this.RepositorySelection?.RepoOwner &&
-      this.RepositorySelection?.RepoName &&
+      (this.RepositorySelection?.Owners?.length > 0 ||
+        this.RepositorySelection?.IndividualRepos?.length > 0) &&
       this.GithubToken
     );
   }
@@ -22,26 +27,23 @@ export class Configuration {
 const currentConfig: Configuration = new Configuration();
 const onChangeCallbacks: ((config: Configuration) => void)[] = [];
 const initialConfigLoadPromise = new Promise<void>((resolve) => {
-  chrome.storage.sync.get(
-    ['REPO_OWNER', 'REPO_NAME', 'GITHUB_TOKEN'],
-    (config) => {
-      currentConfig.RepositorySelection.RepoOwner = config.REPO_OWNER;
-      currentConfig.RepositorySelection.RepoName = config.REPO_NAME;
-      currentConfig.GithubToken = config.GITHUB_TOKEN;
-      resolve();
-    }
-  );
+  chrome.storage.sync.get(['REPO_SELECTION', 'GITHUB_TOKEN'], (config) => {
+    currentConfig.RepositorySelection = config.REPO_SELECTION
+      ? JSON.parse(config.REPO_SELECTION)
+      : new RepositorySelection();
+    currentConfig.GithubToken = config.GITHUB_TOKEN;
+    resolve();
+  });
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace !== 'sync') return;
   let changedMade = false;
   for (const [key, { newValue }] of Object.entries(changes)) {
-    if (key === 'REPO_OWNER') {
-      currentConfig.RepositorySelection.RepoOwner = newValue || '';
-      changedMade = true;
-    } else if (key === 'REPO_NAME') {
-      currentConfig.RepositorySelection.RepoName = newValue || '';
+    if (key === 'REPO_SELECTION') {
+      currentConfig.RepositorySelection = config.REPO_SELECTION
+        ? JSON.parse(config.REPO_SELECTION)
+        : new RepositorySelection();
       changedMade = true;
     } else if (key === 'GITHUB_TOKEN') {
       currentConfig.GithubToken = newValue || '';
@@ -65,8 +67,7 @@ export async function UpdateConfig(
   for (const key in newState) {
     if (!Object.prototype.hasOwnProperty.call(newState, key)) continue;
     if (key == 'RepositorySelection') {
-      updateSyncState['REPO_OWNER'] = (newState[key] || {}).RepoOwner;
-      updateSyncState['REPO_NAME'] = (newState[key] || {}).RepoName;
+      updateSyncState['REPO_SELECTION'] = JSON.stringify(newState[key]);
     } else if (key == 'GithubToken') {
       updateSyncState['GITHUB_TOKEN'] = newState[key] || '';
     }

@@ -15,21 +15,28 @@ async function fetchPRs(configuration: Configuration) {
   }
   try {
     UpdateState({ isUpdateInProgress: true });
-    const latestPRs = await octokit.paginate(
-      `GET /repos/${configuration.RepositorySelection.RepoOwner}/${configuration.RepositorySelection.RepoName}/pulls?per_page=100`,
-      {
-        headers: {
-          Authorization: `token ${configuration.GithubToken}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      }
-    );
+    const latestPRs = [];
+    for (const repo of configuration.RepositorySelection.IndividualRepos) {
+      latestPRs.push(
+        ...(await octokit.paginate(
+          `GET /repos/${repo.owner}/${repo.name}/pulls?per_page=100`,
+          {
+            headers: {
+              Authorization: `token ${configuration.GithubToken}`,
+              Accept: 'application/vnd.github.v3+json',
+            },
+          }
+        ))
+      );
+    }
     UpdateState({
+      repos: configuration.RepositorySelection.IndividualRepos,
       latestPRs: latestPRs,
       lastUpdateTime: new Date(),
       isUpdateInProgress: false,
     });
   } catch (error) {
+    // TODO: Catch errors by repo individually
     UpdateState({ latestError: error, isUpdateInProgress: false });
     console.log('error:(', error);
   }
@@ -37,7 +44,7 @@ async function fetchPRs(configuration: Configuration) {
 
 GetConfig().then((config) => {
   fetchPRs(config);
-  setInterval(() => fetchPRs(config), 60000);
+  setInterval(() => GetConfig().then(fetchPRs), 60000);
 });
 OnConfigChange(fetchPRs);
 

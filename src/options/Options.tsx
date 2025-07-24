@@ -14,10 +14,7 @@ export default function Options(): JSX.Element {
 
   useEffect(() => {
     GetConfig().then((config) => {
-      setRepoSelection({
-        RepoOwner: config.RepositorySelection.RepoOwner,
-        RepoName: config.RepositorySelection.RepoName,
-      });
+      setRepoSelection(config.RepositorySelection);
       setToken(config.GithubToken);
       setLoading(false);
     });
@@ -27,8 +24,9 @@ export default function Options(): JSX.Element {
     await UpdateConfig({
       GithubToken: token,
       RepositorySelection: {
-        RepoOwner: repoSelection.RepoOwner,
-        RepoName: repoSelection.RepoName,
+        IndividualRepos: [
+          { owner: repoSelection.RepoOwner, name: repoSelection.RepoName },
+        ],
       },
     });
     setStatus('Saved!');

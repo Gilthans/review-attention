@@ -20,7 +20,7 @@ function timeAgo(date: Date): string {
 function ErrorTooltip({ error }: { error: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [holdTooltip, setHoldTooltip] = useState(false);
-  console.log(error);
+  console.log('Error: ', error);
   return (
     <span
       className='relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-red-600 bg-red-600 text-xl text-white'
@@ -46,27 +46,76 @@ function ErrorTooltip({ error }: { error: string }) {
   );
 }
 
+function RefreshStatus(props: {
+  backgroundState: BackgroundState;
+  error: string | null;
+}): JSX.Element {
+  const [timeAgoText, setTimeAgoText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!props.backgroundState?.lastUpdateTime) {
+      setTimeAgoText(null);
+      return;
+    }
+    const update = () =>
+      setTimeAgoText(timeAgo(props.backgroundState.lastUpdateTime));
+    update();
+    const interval = setInterval(update, 5000);
+    return () => clearInterval(interval);
+  }, [props.backgroundState?.lastUpdateTime]);
+
+  const children = [];
+  if (props.backgroundState?.isUpdateInProgress) {
+    children.push(
+      <span
+        key='loading'
+        className='loading loading-spinner loading-md text-sm'
+      />
+    );
+  }
+  if (!props.backgroundState?.lastUpdateTime) {
+    children.push(
+      <span key='no-data' className='text-sm text-base-content opacity-70'>
+        No data
+      </span>
+    );
+  } else {
+    const reposTitleText = props.backgroundState?.repos
+      ? [...props.backgroundState.repos]
+          .map((repo) => `${repo.owner}/${repo.name}`)
+          .join('\n')
+      : '';
+    children.push(
+      <span key='updated' className='text-sm text-base-content opacity-70'>
+        <p>Updated {timeAgoText}</p>
+        <p title={reposTitleText}>
+          from {props.backgroundState?.repos?.size ?? 0} repos
+        </p>
+      </span>
+    );
+  }
+
+  return (
+    <div id='status' className='flex items-center gap-2'>
+      {children}
+      {props.error && <ErrorTooltip error={props.error} />}
+      <button
+        className='btn btn-circle btn-outline btn-success btn-sm'
+        onClick={() => chrome.runtime.sendMessage({ type: 'REFRESH_PRS' })}
+      >
+        ⟳
+      </button>
+    </div>
+  );
+}
+
 export default function Popup() {
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [config, _] = useConfig();
   const [backgroundState, backgroundStateVersion] = useBackgroundState();
-  const [timeAgoText, setTimeAgoText] = useState<string | null>(null);
   useEffect(() => {
     setError(backgroundState?.latestError || null);
   }, [backgroundStateVersion, backgroundState?.latestError]);
-
-  useEffect(() => {
-    if (!backgroundState?.lastUpdateTime) {
-      setTimeAgoText(null);
-      return;
-    }
-    const update = () =>
-      setTimeAgoText(timeAgo(backgroundState.lastUpdateTime));
-    update();
-    const interval = setInterval(update, 5000);
-    return () => clearInterval(interval);
-  }, [backgroundState?.lastUpdateTime]);
 
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
@@ -126,24 +175,7 @@ export default function Popup() {
             ⚙
           </button>
         </div>
-        <div id='status' className='flex items-center gap-2'>
-          {backgroundState?.isUpdateInProgress && (
-            <span className='loading loading-spinner loading-md text-sm' />
-          )}
-
-          <span className='text-sm text-base-content opacity-70'>
-            {backgroundState?.lastUpdateTime
-              ? `Updated ${timeAgoText}`
-              : 'No data'}
-          </span>
-          {error && <ErrorTooltip error={error} />}
-          <button
-            className='btn btn-circle btn-outline btn-success btn-sm'
-            onClick={() => chrome.runtime.sendMessage({ type: 'REFRESH_PRS' })}
-          >
-            ⟳
-          </button>
-        </div>
+        <RefreshStatus backgroundState={backgroundState} error={error} />
       </div>
       <div className='max-h-[60vh] space-y-4 overflow-y-auto'>
         {backgroundState?.latestPRs &&

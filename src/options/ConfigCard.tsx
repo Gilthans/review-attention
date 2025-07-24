@@ -8,7 +8,7 @@ export function ConfigCard(props: {
     <div className='card mb-4 max-w-md bg-base-100 shadow-xl'>
       <div className='card-body'>
         <h2 className='card-title mb-4'>{props.title}</h2>
-        {props.children}
+        <div className=' max-h-[30vh] overflow-y-auto'>{props.children}</div>
       </div>
     </div>
   );
