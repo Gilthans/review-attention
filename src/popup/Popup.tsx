@@ -3,8 +3,35 @@ import getAuthenticatedUser from '@utils/auth';
 import { useBackgroundState } from '@utils/backgroundState.ts';
 import { useConfig } from '@utils/config';
 
+function ErrorTooltip({ error }: { error: string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [holdTooltip, setHoldTooltip] = useState(false);
+  return (
+    <span
+      className='relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-red-600 bg-red-600 text-xl text-white'
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+      onClick={() => {
+        setHoldTooltip(!holdTooltip);
+      }}
+      style={{ display: 'inline-flex', alignItems: 'center' }}
+    >
+      ⚠
+      {(showTooltip || holdTooltip) && (
+        <div
+          className='absolute left-1/2 z-10 mt-2 w-max max-w-[125px] -translate-x-1/2 rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
+          style={{ whiteSpace: 'pre-line', top: '100%' }}
+        >
+          {error}
+        </div>
+      )}
+    </span>
+  );
+}
+
 export default function Popup() {
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [config, _] = useConfig();
   const [backgroundState, backgroundStateVersion] = useBackgroundState();
   useEffect(() => {
@@ -14,7 +41,7 @@ export default function Popup() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
-    getAuthenticatedUser().then(setCurrentUser).catch(setError);
+    getAuthenticatedUser().then(setCurrentUser).catch(setLoadError);
   }, []);
 
   if (config === null || currentUser === null) {
@@ -28,11 +55,18 @@ export default function Popup() {
       </div>
     );
   }
-  if (!config.IsConfigured()) {
+  if (!config.IsConfigured() || loadError) {
     return (
       <div id='my-ext' className='container p-4' data-theme='light'>
         <h2 className='mb-2 text-lg font-bold'>Configuration Needed</h2>
-        <p className='mb-4'>Please set up your GitHub repo and token.</p>
+        <p className='mb-4'>
+          {config.IsConfigured()
+            ? 'Please set up your GitHub repo and token.'
+            : 'Unable to load data. Please check your configurations.'}
+        </p>
+        {config.IsConfigured() && loadError && (
+          <div className='alert alert-error mb-4'>{loadError}</div>
+        )}
         <button
           type='button'
           className='btn btn-primary'
@@ -60,6 +94,7 @@ export default function Popup() {
           <span className='text-sm text-base-content opacity-70'>
             Last updated: {backgroundState?.lastUpdateTime?.toLocaleString()}
           </span>
+          {error && <ErrorTooltip error={error} />}
           <button
             className='btn btn-circle btn-outline btn-success btn-sm'
             onClick={() => chrome.runtime.sendMessage({ type: 'REFRESH_PRS' })}
@@ -68,11 +103,6 @@ export default function Popup() {
           </button>
         </div>
       </div>
-      {error && (
-        <div className='alert alert-error mb-4'>
-          <span>Error fetching PRs: {error}</span>
-        </div>
-      )}
       <div className='max-h-[60vh] space-y-4 overflow-y-auto'>
         {backgroundState?.latestPRs &&
           backgroundState.latestPRs
