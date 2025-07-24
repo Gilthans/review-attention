@@ -1,14 +1,13 @@
 import { JSX, useEffect, useState } from 'react';
 import { GithubConfigurationCard } from '@options/GithubConfigurationCard.tsx';
 import { RepositorySelectionCard } from '@options/RepositorySelectionCard.tsx';
-import { GetConfig, UpdateConfig } from '@utils/config.ts';
+import { GetConfig, RepositorySelection, UpdateConfig } from '@utils/config.ts';
 
 export default function Options(): JSX.Element {
   const [token, setToken] = useState('');
-  const [repoSelection, setRepoSelection] = useState<RepositorySelection>({
-    RepoOwner: '',
-    RepoName: '',
-  });
+  const [repoSelection, setRepoSelection] = useState<RepositorySelection>(
+    new RepositorySelection()
+  );
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('');
 
@@ -23,11 +22,7 @@ export default function Options(): JSX.Element {
   const saveConfig = async () => {
     await UpdateConfig({
       GithubToken: token,
-      RepositorySelection: {
-        IndividualRepos: [
-          { owner: repoSelection.RepoOwner, name: repoSelection.RepoName },
-        ],
-      },
+      RepositorySelection: repoSelection,
     });
     setStatus('Saved!');
     setTimeout(() => setStatus(''), 2000);

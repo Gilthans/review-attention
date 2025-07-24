@@ -13,10 +13,11 @@ async function fetchPRs(configuration: Configuration) {
     });
     return;
   }
-  try {
-    UpdateState({ isUpdateInProgress: true });
-    const latestPRs = [];
-    for (const repo of configuration.RepositorySelection.IndividualRepos) {
+  UpdateState({ isUpdateInProgress: true });
+  const latestPRs = [];
+  const errorsByRepo: Record<string, Error> = {};
+  for (const repo of configuration.RepositorySelection.IndividualRepos) {
+    try {
       latestPRs.push(
         ...(await octokit.paginate(
           `GET /repos/${repo.owner}/${repo.name}/pulls?per_page=100`,
@@ -28,18 +29,23 @@ async function fetchPRs(configuration: Configuration) {
           }
         ))
       );
+    } catch (error) {
+      const repoTitle = `${repo.owner}/${repo.name}`;
+      errorsByRepo[repoTitle] = error;
+      console.log('Error with repo ', repoTitle, error, repo);
     }
-    UpdateState({
-      repos: configuration.RepositorySelection.IndividualRepos,
-      latestPRs: latestPRs,
-      lastUpdateTime: new Date(),
-      isUpdateInProgress: false,
-    });
-  } catch (error) {
-    // TODO: Catch errors by repo individually
-    UpdateState({ latestError: error, isUpdateInProgress: false });
-    console.log('error:(', error);
   }
+  UpdateState({
+    repos: configuration.RepositorySelection.IndividualRepos,
+    latestError: !errorsByRepo
+      ? ''
+      : Object.entries(errorsByRepo)
+          .map(([repo, error]) => `${repo}: ${error}`)
+          .join('\n'),
+    latestPRs: latestPRs,
+    lastUpdateTime: new Date(),
+    isUpdateInProgress: false,
+  });
 }
 
 GetConfig().then((config) => {

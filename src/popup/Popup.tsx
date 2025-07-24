@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import getAuthenticatedUser from '@utils/auth';
 import { useBackgroundState } from '@utils/backgroundState.ts';
 import { useConfig } from '@utils/config';
+import _ from 'lodash';
 
 function timeAgo(date: Date): string {
   const now = new Date();
@@ -34,12 +35,14 @@ function ErrorTooltip({ error }: { error: string }) {
       ⚠
       {(showTooltip || holdTooltip) && (
         <div
-          className='absolute left-1/2 z-10 mt-2 max-h-[250px] w-max max-w-[125px] -translate-x-1/2 overflow-auto rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
+          className='absolute right-1/2 z-10 mt-2 max-h-[250px] w-max max-w-[400px] overflow-auto rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
           style={{ whiteSpace: 'pre-line', top: '100%' }}
         >
           {error.status
             ? `${error.status}: ${error.response?.data?.message}`
-            : JSON.stringify(error)}
+            : _.isString(error)
+              ? error
+              : JSON.stringify(error)}
         </div>
       )}
     </span>
@@ -111,7 +114,7 @@ function RefreshStatus(props: {
 export default function Popup() {
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [config, _] = useConfig();
+  const [config, __] = useConfig();
   const [backgroundState, backgroundStateVersion] = useBackgroundState();
   useEffect(() => {
     setError(backgroundState?.latestError || null);
@@ -177,7 +180,7 @@ export default function Popup() {
         </div>
         <RefreshStatus backgroundState={backgroundState} error={error} />
       </div>
-      <div className='max-h-[60vh] space-y-4 overflow-y-auto'>
+      <div className='max-h-[85vh] space-y-4 overflow-y-auto'>
         {backgroundState?.latestPRs &&
           backgroundState.latestPRs
             .filter(

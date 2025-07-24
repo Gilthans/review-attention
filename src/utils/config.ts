@@ -27,13 +27,16 @@ export class Configuration {
 const currentConfig: Configuration = new Configuration();
 const onChangeCallbacks: ((config: Configuration) => void)[] = [];
 const initialConfigLoadPromise = new Promise<void>((resolve) => {
-  chrome.storage.sync.get(['REPO_SELECTION', 'GITHUB_TOKEN'], (config) => {
-    currentConfig.RepositorySelection = config.REPO_SELECTION
-      ? JSON.parse(config.REPO_SELECTION)
-      : new RepositorySelection();
-    currentConfig.GithubToken = config.GITHUB_TOKEN;
-    resolve();
-  });
+  chrome.storage.sync.get(
+    ['REPO_SELECTION', 'GITHUB_TOKEN'],
+    (loadedConfig) => {
+      currentConfig.RepositorySelection = loadedConfig.REPO_SELECTION
+        ? JSON.parse(loadedConfig.REPO_SELECTION)
+        : new RepositorySelection();
+      currentConfig.GithubToken = loadedConfig.GITHUB_TOKEN;
+      resolve();
+    }
+  );
 });
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -41,8 +44,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   let changedMade = false;
   for (const [key, { newValue }] of Object.entries(changes)) {
     if (key === 'REPO_SELECTION') {
-      currentConfig.RepositorySelection = config.REPO_SELECTION
-        ? JSON.parse(config.REPO_SELECTION)
+      currentConfig.RepositorySelection = newValue
+        ? JSON.parse(newValue)
         : new RepositorySelection();
       changedMade = true;
     } else if (key === 'GITHUB_TOKEN') {
