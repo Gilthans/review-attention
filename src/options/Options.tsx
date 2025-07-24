@@ -60,6 +60,7 @@ export default function Options(): JSX.Element {
         <GithubConfigurationCard token={token} setToken={setToken} />
         {token && (
           <RepositorySelectionCard
+            token={token}
             selection={repoSelection}
             selectionChanged={setRepoSelection}
           />

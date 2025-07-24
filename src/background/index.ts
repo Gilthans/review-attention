@@ -24,7 +24,6 @@ async function fetchPRs(configuration: Configuration) {
         },
       }
     );
-    console.log(new Date());
     UpdateState({
       latestPRs: latestPRs,
       lastUpdateTime: new Date(),
