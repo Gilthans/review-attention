@@ -47,7 +47,7 @@ export default function Popup() {
   if (config === null || currentUser === null) {
     return (
       <div
-        id='review-attention'
+        id='pr-hawk'
         className='flex min-h-screen items-center justify-center bg-base-200'
         data-theme='light'
       >
@@ -57,7 +57,7 @@ export default function Popup() {
   }
   if (!config.IsConfigured() || loadError) {
     return (
-      <div id='review-attention' className='container p-4' data-theme='light'>
+      <div id='pr-hawk' className='container p-4' data-theme='light'>
         <h2 className='mb-2 text-lg font-bold'>Configuration Needed</h2>
         <p className='mb-4'>
           {config.IsConfigured()
@@ -80,7 +80,7 @@ export default function Popup() {
 
   return (
     <div
-      id='review-attention'
+      id='pr-hawk'
       className='container min-w-[350px] max-w-[650px] p-4'
       data-theme='light'
     >

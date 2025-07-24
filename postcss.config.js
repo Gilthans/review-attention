@@ -37,7 +37,7 @@ const postcssConfig = {
 
     // Add a prefix to all selectors
     postcssPrefixSelector({
-      prefix: '#review-attention',
+      prefix: '#pr-hawk',
       transform: transformSelector,
     }),
 

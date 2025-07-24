@@ -1,6 +1,6 @@
 {
-  "name": "github-review-attention",
-  "displayName": "Github Review Attention",
+  "name": "pr-hawk",
+  "displayName": "PR Hawk",
   "description": "Alerts you when pull requests are awaiting your attention.",
   "private": true,
   "version": "0.0.1",
