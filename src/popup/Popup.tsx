@@ -3,6 +3,20 @@ import getAuthenticatedUser from '@utils/auth';
 import { useBackgroundState } from '@utils/backgroundState.ts';
 import { useConfig } from '@utils/config';
 
+function timeAgo(date: Date): string {
+  const now = new Date();
+  const seconds = Math.round((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 5) return `now`;
+  if (seconds < 60) return `<1 minute ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
+
 function ErrorTooltip({ error }: { error: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [holdTooltip, setHoldTooltip] = useState(false);
@@ -34,9 +48,22 @@ export default function Popup() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [config, _] = useConfig();
   const [backgroundState, backgroundStateVersion] = useBackgroundState();
+  const [timeAgoText, setTimeAgoText] = useState<string | null>(null);
   useEffect(() => {
     setError(backgroundState?.latestError || null);
   }, [backgroundStateVersion, backgroundState?.latestError]);
+
+  useEffect(() => {
+    if (!backgroundState?.lastUpdateTime) {
+      setTimeAgoText(null);
+      return;
+    }
+    const update = () =>
+      setTimeAgoText(timeAgo(backgroundState.lastUpdateTime));
+    update();
+    const interval = setInterval(update, 5000);
+    return () => clearInterval(interval);
+  }, [backgroundState?.lastUpdateTime]);
 
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
@@ -102,7 +129,9 @@ export default function Popup() {
           )}
 
           <span className='text-sm text-base-content opacity-70'>
-            Last updated: {backgroundState?.lastUpdateTime?.toLocaleString()}
+            {backgroundState?.lastUpdateTime
+              ? `Updated ${timeAgoText}`
+              : 'No data'}
           </span>
           {error && <ErrorTooltip error={error} />}
           <button

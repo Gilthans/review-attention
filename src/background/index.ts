@@ -37,7 +37,7 @@ async function fetchPRs(configuration: Configuration) {
 
 GetConfig().then((config) => {
   fetchPRs(config);
-  setInterval(() => fetchPRs(config), 10000);
+  setInterval(() => fetchPRs(config), 60000);
 });
 OnConfigChange(fetchPRs);
 
