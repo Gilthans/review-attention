@@ -16,7 +16,7 @@ async function fetchPRs(configuration: Configuration) {
   try {
     UpdateState({ isUpdateInProgress: true });
     const latestPRs = await octokit.paginate(
-      `GET /repos/${configuration.RepoOwner}/${configuration.RepoName}/pulls?per_page=100`,
+      `GET /repos/${configuration.RepositorySelection.RepoOwner}/${configuration.RepositorySelection.RepoName}/pulls?per_page=100`,
       {
         headers: {
           Authorization: `token ${configuration.GithubToken}`,

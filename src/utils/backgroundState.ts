@@ -33,7 +33,10 @@ const initialStateLoadPromise = new Promise<void>((resolve) => {
     (state) => {
       currentState.latestPRs = state.LATEST_PRS;
       currentState.latestError = state.LATEST_ERROR;
-      currentState.lastUpdateTime = new Date(state.LAST_UPDATE_TIME);
+      currentState.lastUpdateTime =
+        state.LAST_UPDATE_TIME && state.LAST_UPDATE_TIME > 0
+          ? new Date(state.LAST_UPDATE_TIME)
+          : null;
       currentState.isUpdateInProgress = state.IS_UPDATE_IN_PROGRESS;
       resolve();
     }
@@ -52,7 +55,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       changedMade = true;
     } else if (key === 'LAST_UPDATE_TIME' && newValue) {
       console.log('Updating lastUpdateTime:', newValue);
-      currentState.lastUpdateTime = new Date(newValue);
+      currentState.lastUpdateTime = newValue ? new Date(newValue) : null;
       changedMade = true;
     } else if (key === 'IS_UPDATE_IN_PROGRESS') {
       currentState.isUpdateInProgress = newValue || false;

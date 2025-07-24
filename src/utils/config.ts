@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 
+export class RepositorySelection {
+  RepoOwner: string = '';
+  RepoName: string = '';
+}
+
 export class Configuration {
   IsConfigured(): boolean {
-    return !!(this.RepoOwner && this.RepoName && this.GithubToken);
+    return !!(
+      this.RepositorySelection?.RepoOwner &&
+      this.RepositorySelection?.RepoName &&
+      this.GithubToken
+    );
   }
 
-  RepoOwner: string = '';
-
-  RepoName: string = '';
+  RepositorySelection: RepositorySelection = new RepositorySelection();
 
   GithubToken: string = '';
 }
@@ -18,8 +25,8 @@ const initialConfigLoadPromise = new Promise<void>((resolve) => {
   chrome.storage.sync.get(
     ['REPO_OWNER', 'REPO_NAME', 'GITHUB_TOKEN'],
     (config) => {
-      currentConfig.RepoOwner = config.REPO_OWNER;
-      currentConfig.RepoName = config.REPO_NAME;
+      currentConfig.RepositorySelection.RepoOwner = config.REPO_OWNER;
+      currentConfig.RepositorySelection.RepoName = config.REPO_NAME;
       currentConfig.GithubToken = config.GITHUB_TOKEN;
       resolve();
     }
@@ -31,10 +38,10 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   let changedMade = false;
   for (const [key, { newValue }] of Object.entries(changes)) {
     if (key === 'REPO_OWNER') {
-      currentConfig.RepoOwner = newValue || '';
+      currentConfig.RepositorySelection.RepoOwner = newValue || '';
       changedMade = true;
     } else if (key === 'REPO_NAME') {
-      currentConfig.RepoName = newValue || '';
+      currentConfig.RepositorySelection.RepoName = newValue || '';
       changedMade = true;
     } else if (key === 'GITHUB_TOKEN') {
       currentConfig.GithubToken = newValue || '';
@@ -49,6 +56,22 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 export async function GetConfig(): Promise<Configuration> {
   await initialConfigLoadPromise;
   return currentConfig;
+}
+
+export async function UpdateConfig(
+  newState: Partial<Configuration>
+): Promise<void> {
+  const updateSyncState = {};
+  for (const key in newState) {
+    if (!Object.prototype.hasOwnProperty.call(newState, key)) continue;
+    if (key == 'RepositorySelection') {
+      updateSyncState['REPO_OWNER'] = (newState[key] || {}).RepoOwner;
+      updateSyncState['REPO_NAME'] = (newState[key] || {}).RepoName;
+    } else if (key == 'GithubToken') {
+      updateSyncState['GITHUB_TOKEN'] = newState[key] || '';
+    }
+  }
+  await chrome.storage.sync.set(updateSyncState);
 }
 
 export function OnConfigChange(

@@ -1,12 +1,7 @@
 import { JSX, useEffect, useState } from 'react';
 import { GithubConfigurationCard } from '@options/GithubConfigurationCard.tsx';
 import { RepositorySelectionCard } from '@options/RepositorySelectionCard.tsx';
-import { GetConfig } from '@utils/config.ts';
-
-class RepositorySelection {
-  RepoOwner: string = '';
-  RepoName: string = '';
-}
+import { GetConfig, UpdateConfig } from '@utils/config.ts';
 
 export default function Options(): JSX.Element {
   const [token, setToken] = useState('');
@@ -20,27 +15,24 @@ export default function Options(): JSX.Element {
   useEffect(() => {
     GetConfig().then((config) => {
       setRepoSelection({
-        RepoOwner: config.RepoOwner,
-        RepoName: config.RepoName,
+        RepoOwner: config.RepositorySelection.RepoOwner,
+        RepoName: config.RepositorySelection.RepoName,
       });
       setToken(config.GithubToken);
       setLoading(false);
     });
   }, []);
 
-  const saveConfig = () => {
-    chrome.storage.sync.set(
-      {
-        REPO_OWNER: repoSelection.RepoOwner,
-        REPO_NAME: repoSelection.RepoName,
-        GITHUB_TOKEN: token,
+  const saveConfig = async () => {
+    await UpdateConfig({
+      GithubToken: token,
+      RepositorySelection: {
+        RepoOwner: repoSelection.RepoOwner,
+        RepoName: repoSelection.RepoName,
       },
-      () => {
-        setStatus('Saved!');
-        setTimeout(() => setStatus(''), 2000);
-        chrome.runtime.sendMessage({ type: 'CONFIGURE' }, () => {});
-      }
-    );
+    });
+    setStatus('Saved!');
+    setTimeout(() => setStatus(''), 2000);
   };
 
   if (loading) {

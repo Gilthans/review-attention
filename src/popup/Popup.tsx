@@ -20,6 +20,7 @@ function timeAgo(date: Date): string {
 function ErrorTooltip({ error }: { error: string }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [holdTooltip, setHoldTooltip] = useState(false);
+  console.log(error);
   return (
     <span
       className='relative inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-red-600 bg-red-600 text-xl text-white'
@@ -33,10 +34,12 @@ function ErrorTooltip({ error }: { error: string }) {
       ⚠
       {(showTooltip || holdTooltip) && (
         <div
-          className='absolute left-1/2 z-10 mt-2 w-max max-w-[125px] -translate-x-1/2 rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
+          className='absolute left-1/2 z-10 mt-2 max-h-[250px] w-max max-w-[125px] -translate-x-1/2 overflow-auto rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
           style={{ whiteSpace: 'pre-line', top: '100%' }}
         >
-          {error}
+          {error.status
+            ? `${error.status}: ${error.response?.data?.message}`
+            : JSON.stringify(error)}
         </div>
       )}
     </span>
@@ -87,9 +90,9 @@ export default function Popup() {
       <div id='pr-hawk' className='container p-4' data-theme='light'>
         <h2 className='mb-2 text-lg font-bold'>Configuration Needed</h2>
         <p className='mb-4'>
-          {config.IsConfigured()
+          {!config.IsConfigured()
             ? 'Please set up your GitHub repo and token.'
-            : 'Unable to load data. Please check your configurations.'}
+            : `Unable to load data. Please check your configurations. (${loadError})`}
         </p>
         {config.IsConfigured() && loadError && (
           <div className='alert alert-error mb-4'>{loadError}</div>
@@ -218,7 +221,7 @@ export default function Popup() {
               </div>
             ))}
         {backgroundState?.lastUpdateTime &&
-          backgroundState?.latestPRs.length === 0 &&
+          backgroundState?.latestPRs?.length === 0 &&
           !error && (
             <div className='text-center text-base-content opacity-70'>
               No pull requests found.
