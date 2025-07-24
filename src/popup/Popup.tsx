@@ -85,7 +85,17 @@ export default function Popup() {
       data-theme='light'
     >
       <div id='top-bar' className='mb-4 flex items-center justify-between'>
-        <h2 className='mb-4 text-xl font-bold'>Pull Requests</h2>
+        <div className='mb-4 flex items-center gap-2 align-middle'>
+          <h2 className='m-0 p-0 text-xl font-bold'>Pull Requests</h2>
+          <button
+            type='button'
+            className='btn btn-circle btn-ghost btn-sm p-0 text-sm'
+            title='Options'
+            onClick={() => chrome.runtime.openOptionsPage()}
+          >
+            ⚙
+          </button>
+        </div>
         <div id='status' className='flex items-center gap-2'>
           {backgroundState?.isUpdateInProgress && (
             <span className='loading loading-spinner loading-md text-sm' />
