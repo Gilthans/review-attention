@@ -46,7 +46,7 @@ export default function Options(): JSX.Element {
   if (loading) {
     return (
       <div
-        id='my-ext'
+        id='review-attention'
         className='flex min-h-screen items-center justify-center bg-base-200'
         data-theme='light'
       >
@@ -55,7 +55,7 @@ export default function Options(): JSX.Element {
     );
   }
   return (
-    <div id='my-ext' data-theme='light'>
+    <div id='review-attention' data-theme='light'>
       <div className='flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-base-200'>
         <GithubConfigurationCard token={token} setToken={setToken} />
         {token && (
