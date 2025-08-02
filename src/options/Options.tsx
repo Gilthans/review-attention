@@ -47,7 +47,7 @@ export default function Options(): JSX.Element {
           <RepositorySelectionCard
             token={token}
             selection={repoSelection}
-            selectionChanged={setRepoSelection}
+            onSelectionChanged={setRepoSelection}
           />
         )}
         <div className='flex justify-center'>

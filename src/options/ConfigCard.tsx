@@ -1,8 +1,8 @@
-import { JSX } from 'react';
+import { JSX, ReactNode } from 'react';
 
 export function ConfigCard(props: {
   title: string;
-  children: JSX.Element;
+  children: ReactNode;
 }): JSX.Element {
   return (
     <div className='card mb-4 max-w-md bg-base-100 shadow-xl'>

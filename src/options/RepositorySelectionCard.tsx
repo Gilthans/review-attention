@@ -1,5 +1,6 @@
-import { JSX, useEffect, useMemo, useState } from 'react';
+import { JSX, useEffect, useMemo, useRef, useState } from 'react';
 import { ConfigCard } from '@options/ConfigCard.tsx';
+import { RepositorySelection } from '@utils/config.ts';
 import { Octokit } from 'octokit';
 
 type Repo = {
@@ -8,12 +9,125 @@ type Repo = {
   owner: { login: string };
 };
 
+function OwnerRepoList(props: {
+  owner: string;
+  repos: Repo[];
+  selection: RepositorySelection;
+  onSelectionChanged: (selection: RepositorySelection) => void;
+}): JSX.Element {
+  const { owner, repos, selection, onSelectionChanged } = props;
+
+  const allChecked = repos.every((repo) =>
+    selection.IndividualRepos.some(
+      (configuredRepo) =>
+        configuredRepo.owner === repo.owner.login &&
+        configuredRepo.name === repo.name
+    )
+  );
+  const someChecked = repos.some((repo) =>
+    selection.IndividualRepos.some(
+      (configuredRepo) =>
+        configuredRepo.owner === repo.owner.login &&
+        configuredRepo.name === repo.name
+    )
+  );
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = !allChecked && someChecked;
+    }
+  }, [allChecked, someChecked]);
+
+  return (
+    <div key={owner} className='flex flex-col'>
+      <div className='mb-2 font-bold'>
+        <input
+          ref={selectAllRef}
+          type='checkbox'
+          checked={allChecked}
+          onChange={() => {
+            const newSelection = { ...selection };
+            if (allChecked) {
+              newSelection.IndividualRepos =
+                newSelection.IndividualRepos.filter((r) => r.owner !== owner);
+            } else {
+              const toAdd = repos
+                .filter(
+                  (repo) =>
+                    !newSelection.IndividualRepos.some(
+                      (r) =>
+                        r.owner === repo.owner.login && r.name === repo.name
+                    )
+                )
+                .map((repo) => ({
+                  owner: repo.owner.login,
+                  name: repo.name,
+                }));
+              newSelection.IndividualRepos = [
+                ...newSelection.IndividualRepos,
+                ...toAdd,
+              ];
+            }
+            onSelectionChanged(newSelection);
+          }}
+          className='checkbox'
+        />
+
+        {owner}
+      </div>
+      <form className='space-y-2'>
+        {repos.map((repo) => {
+          const checked =
+            selection.IndividualRepos.findIndex(
+              (configuredRepo) =>
+                configuredRepo.owner === repo.owner.login &&
+                configuredRepo.name === repo.name
+            ) !== -1;
+          return (
+            <label
+              key={repo.id}
+              className='flex cursor-pointer items-center gap-2'
+            >
+              <input
+                type='checkbox'
+                checked={checked}
+                onChange={() => {
+                  const newSelection = { ...selection };
+                  if (checked) {
+                    // Remove from selection
+                    newSelection.IndividualRepos =
+                      newSelection.IndividualRepos.filter(
+                        (configuredRepo) =>
+                          configuredRepo.owner !== repo.owner.login ||
+                          configuredRepo.name !== repo.name
+                      );
+                  } else {
+                    // Add to selection
+                    newSelection.IndividualRepos.push({
+                      owner: repo.owner.login,
+                      name: repo.name,
+                    });
+                  }
+                  onSelectionChanged(newSelection);
+                }}
+                className='checkbox'
+              />
+              <span className='font-mono'>{repo.name}</span>
+            </label>
+          );
+        })}
+      </form>
+    </div>
+  );
+}
+
 export function RepositorySelectionCard(props: {
   token: string;
   selection: RepositorySelection;
-  selectionChanged: (newSelection: RepositorySelection) => void;
+  onSelectionChanged: (newSelection: RepositorySelection) => void;
 }): JSX.Element {
-  const { token, selection, selectionChanged } = props;
+  const { token, selection, onSelectionChanged } = props;
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -77,7 +191,7 @@ export function RepositorySelectionCard(props: {
                             newSelection.IndividualRepos.filter(
                               (configuredRepo) => configuredRepo != repo
                             );
-                          selectionChanged(newSelection);
+                          onSelectionChanged(newSelection);
                         }}
                         className='checkbox'
                       />
@@ -91,51 +205,13 @@ export function RepositorySelectionCard(props: {
             </div>
           )}
           {Object.entries(reposByOwner).map(([owner, ownerRepos]) => (
-            <div key={owner} className='flex flex-col'>
-              <div className='mb-2 font-bold'>{owner}</div>
-              <form className='space-y-2'>
-                {ownerRepos.map((repo) => {
-                  const checked =
-                    selection.IndividualRepos.findIndex(
-                      (configuredRepo) =>
-                        configuredRepo.owner === repo.owner.login &&
-                        configuredRepo.name === repo.name
-                    ) !== -1;
-                  return (
-                    <label
-                      key={repo.id}
-                      className='flex cursor-pointer items-center gap-2'
-                    >
-                      <input
-                        type='checkbox'
-                        checked={checked}
-                        onChange={() => {
-                          const newSelection = { ...selection };
-                          if (checked) {
-                            // Remove from selection
-                            newSelection.IndividualRepos =
-                              newSelection.IndividualRepos.filter(
-                                (configuredRepo) =>
-                                  configuredRepo.owner !== repo.owner.login ||
-                                  configuredRepo.name !== repo.name
-                              );
-                          } else {
-                            // Add to selection
-                            newSelection.IndividualRepos.push({
-                              owner: repo.owner.login,
-                              name: repo.name,
-                            });
-                          }
-                          selectionChanged(newSelection);
-                        }}
-                        className='checkbox'
-                      />
-                      <span className='font-mono'>{repo.name}</span>
-                    </label>
-                  );
-                })}
-              </form>
-            </div>
+            <OwnerRepoList
+              key={owner}
+              owner={owner}
+              repos={ownerRepos}
+              selection={selection}
+              onSelectionChanged={onSelectionChanged}
+            />
           ))}
         </div>
       )}

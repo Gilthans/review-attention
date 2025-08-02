@@ -1,7 +1,7 @@
 {
   "name": "pr-hawk",
   "displayName": "PR Hawk",
-  "description": "Alerts you when pull requests are awaiting your attention.",
+  "description": "Keep a hawk's eye on your pull requests.",
   "private": true,
   "version": "0.0.1",
   "type": "module",
