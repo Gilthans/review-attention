@@ -35,6 +35,11 @@ async function fetchPRs(configuration: Configuration) {
       console.log('Error with repo ', repoTitle, error, repo);
     }
   }
+
+  chrome.action.setBadgeText({ text: latestPRs?.length.toString() });
+  chrome.action.setBadgeBackgroundColor({ color: 'red' });
+  chrome.action.setBadgeTextColor({ color: 'white' });
+
   UpdateState({
     repos: configuration.RepositorySelection.IndividualRepos,
     latestError: !errorsByRepo
