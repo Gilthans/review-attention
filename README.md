@@ -12,8 +12,8 @@ Follow these steps to install this Chrome extension from source:
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/rezasohrabi/chrome-ext-starter.git
-   cd chrome-ext-starter
+   git clone https://github.com/Gilthans/review-attention.git
+   cd review-attention
    ```
 
 2. **Install dependencies:**
