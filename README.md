@@ -1,27 +1,47 @@
-# 🚀 Chrome Extension Starter Kit 
+# 🚀 Chrome Extension Installation Guide
 
-Get started with building your dream Chrome extension effortlessly! Our starter kit combines the power of cutting-edge technologies like Vite, TypeScript, React, CRX, Tailwind CSS, and DaisyUI, making extension development a breeze.
+Follow these steps to install this Chrome extension from source:
 
-Why choose this template? 🤔 Well, there are countless templates out there, but if you're eyeing Tailwind for your Chrome extension, you're in luck! 🎉 With this template, diving into extension development becomes a breeze – no configuration needed! 💻
+## Prerequisites
 
-## Key Features
-- 🛠️ **Vite**: for lightning-fast development and hot module replacement.
-- 🧰 **TypeScript**: for type safety and enhanced productivity.
-- ⚛️ **React**: for building dynamic and interactive UI components.
-- 📦 **CRX**: for easy packaging and distribution of your extension.
-- 🎨 **Tailwind CSS**: for hassle-free styling, including seamless integration in content scripts.
-- 🌼 **DaisyUI**: for beautiful and customizable UI elements right out of the box.
+- Node.js and npm (or pnpm) installed
+- Git installed
 
-## Why Choose Our Starter Kit?
-- 🚀 **Streamlined Setup**: Say goodbye to configuration headaches. Get up and running in minutes.
-- ⚡ **Optimized Performance**: Leverage Vite's speed and Tailwind CSS's efficiency for blazing-fast development.
-- 👩‍💻 **Developer-Friendly**: TypeScript support and React components empower developers to build feature-rich extensions with ease.
+## Installation Steps
 
-## 🚀 Get Started
-- 1️⃣ Clone the repo: git clone https://github.com/rezasohrabi/chrome-ext-starter.git
-- 2️⃣ Install dependencies: pnpm install
-- 3️⃣ Start development: pnpm dev
-- 4️⃣ Build for production: pnpm build
+1. **Clone the repository:**
 
-### 🤝 How to Contribute
-We welcome and appreciate contributions to improve this project. Whether you would like to fix a bug, introduce a new feature, or enhance the documentation, your contributions are highly valued.
+   ```sh
+   git clone https://github.com/rezasohrabi/chrome-ext-starter.git
+   cd chrome-ext-starter
+   ```
+
+2. **Install dependencies:**
+
+   ```sh
+   pnpm install
+   ```
+
+   _Or use `npm install` if you prefer._
+
+3. **Build the extension:**
+
+   ```sh
+   pnpm build
+   ```
+
+   _Or use `npm run build`._
+
+4. **Load the extension in Chrome:**
+   - Open `chrome://extensions/` in your browser.
+   - Enable "Developer mode" (top right).
+   - Click "Load unpacked".
+   - Select the `dist` folder inside the project directory.
+
+## Updating the Extension
+
+- After making changes, run `pnpm build` again and reload the extension in Chrome.
+
+---
+
+For development, use `pnpm dev` to start the local server and rebuild automatically.
