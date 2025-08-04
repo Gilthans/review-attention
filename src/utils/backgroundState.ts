@@ -19,12 +19,20 @@ export type PR = {
   draft: boolean;
 };
 
-class BackgroundState {
+export class BackgroundState {
   repos = new Set<Repository>();
   latestPRs: PR[] = [];
   latestError: string | null = null;
   lastUpdateTime: Date | null = null;
   isUpdateInProgress: boolean = false;
+}
+
+interface StorageItem {
+  LATEST_PRS?: PR[];
+  LATEST_ERROR?: string;
+  LAST_UPDATE_TIME?: number;
+  IS_UPDATE_IN_PROGRESS?: boolean;
+  REPOS?: string; // JSON string of Repository[]
 }
 
 const currentState: BackgroundState = new BackgroundState();
@@ -100,7 +108,7 @@ export function OnStateChange(
 }
 
 export function UpdateState(newState: Partial<BackgroundState>) {
-  const updatedSessionState = {};
+  const updatedSessionState: StorageItem = {};
   for (const key in newState) {
     if (!Object.prototype.hasOwnProperty.call(newState, key)) continue;
     if (key == 'latestPRs') {

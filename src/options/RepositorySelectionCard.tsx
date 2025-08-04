@@ -138,7 +138,7 @@ export function RepositorySelectionCard(props: {
     if (!token) return;
     setLoading(true);
     octokit
-      .paginate('GET /user/repos', {
+      .paginate<Repo>('GET /user/repos', {
         headers: { Authorization: `token ${token}` },
       })
       .then((data) => setRepos(data))

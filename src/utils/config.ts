@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export class Repository {
+export interface Repository {
   owner: string;
   name: string;
+}
+
+interface StorageElement {
+  REPO_SELECTION?: string;
+  GITHUB_TOKEN?: string;
 }
 
 export class RepositorySelection {
@@ -66,7 +71,7 @@ export async function GetConfig(): Promise<Configuration> {
 export async function UpdateConfig(
   newState: Partial<Configuration>
 ): Promise<void> {
-  const updateSyncState = {};
+  const updateSyncState: StorageElement = {};
   for (const key in newState) {
     if (!Object.prototype.hasOwnProperty.call(newState, key)) continue;
     if (key == 'RepositorySelection') {

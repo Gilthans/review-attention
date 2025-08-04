@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import getAuthenticatedUser from '@utils/auth';
-import { useBackgroundState } from '@utils/backgroundState.ts';
+import { BackgroundState, useBackgroundState } from '@utils/backgroundState.ts';
 import { useConfig } from '@utils/config';
 import _ from 'lodash';
 
@@ -18,7 +18,8 @@ function timeAgo(date: Date): string {
   return `${days} day${days !== 1 ? 's' : ''} ago`;
 }
 
-function ErrorTooltip({ error }: { error: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ErrorTooltip({ error }: { error: any }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [holdTooltip, setHoldTooltip] = useState(false);
   console.log('Error: ', error);
@@ -38,7 +39,7 @@ function ErrorTooltip({ error }: { error: string }) {
           className='absolute right-1/2 z-10 mt-2 max-h-[250px] w-max max-w-[400px] overflow-auto rounded bg-red-600 px-3 py-1 text-xs text-white shadow'
           style={{ whiteSpace: 'pre-line', top: '100%' }}
         >
-          {error.status
+          {'status' in error
             ? `${error.status}: ${error.response?.data?.message}`
             : _.isString(error)
               ? error
@@ -50,9 +51,9 @@ function ErrorTooltip({ error }: { error: string }) {
 }
 
 function RefreshStatus(props: {
-  backgroundState: BackgroundState;
+  backgroundState: BackgroundState | null;
   error: string | null;
-}): JSX.Element {
+}): ReactElement {
   const [timeAgoText, setTimeAgoText] = useState<string | null>(null);
   useEffect(() => {
     if (!props.backgroundState?.lastUpdateTime) {
@@ -60,11 +61,11 @@ function RefreshStatus(props: {
       return;
     }
     const update = () =>
-      setTimeAgoText(timeAgo(props.backgroundState.lastUpdateTime));
+      setTimeAgoText(timeAgo(props.backgroundState!.lastUpdateTime!));
     update();
     const interval = setInterval(update, 5000);
     return () => clearInterval(interval);
-  }, [props.backgroundState?.lastUpdateTime]);
+  }, [props.backgroundState, props.backgroundState?.lastUpdateTime]);
 
   const children = [];
   if (props.backgroundState?.isUpdateInProgress) {

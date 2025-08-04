@@ -1,4 +1,4 @@
-import { UpdateState } from '@utils/backgroundState.ts';
+import { PR, UpdateState } from '@utils/backgroundState.ts';
 import { Configuration, GetConfig, OnConfigChange } from '@utils/config.ts';
 import { Octokit } from 'octokit';
 
@@ -15,11 +15,11 @@ async function fetchPRs(configuration: Configuration) {
   }
   UpdateState({ isUpdateInProgress: true });
   const latestPRs = [];
-  const errorsByRepo: Record<string, Error> = {};
+  const errorsByRepo: Record<string, unknown> = {};
   for (const repo of configuration.RepositorySelection.IndividualRepos) {
     try {
       latestPRs.push(
-        ...(await octokit.paginate(
+        ...(await octokit.paginate<PR>(
           `GET /repos/${repo.owner}/${repo.name}/pulls?per_page=100`,
           {
             headers: {
@@ -41,7 +41,7 @@ async function fetchPRs(configuration: Configuration) {
   chrome.action.setBadgeTextColor({ color: 'white' });
 
   UpdateState({
-    repos: configuration.RepositorySelection.IndividualRepos,
+    repos: new Set(configuration.RepositorySelection.IndividualRepos),
     latestError: !errorsByRepo
       ? ''
       : Object.entries(errorsByRepo)
